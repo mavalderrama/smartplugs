@@ -38,6 +38,8 @@ def validHostname(hostname):
 commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 			'on'       : '{"system":{"set_relay_state":{"state":1}}}',
 			'off'      : '{"system":{"set_relay_state":{"state":0}}}',
+			'ledoff'   : '{"system":{"set_led_off":{"off":1}}}',
+			'ledon'    : '{"system":{"set_led_off":{"off":0}}}',
 			'cloudinfo': '{"cnCloud":{"get_info":{}}}',
 			'wlanscan' : '{"netif":{"get_scaninfo":{"refresh":0}}}',
 			'time'     : '{"time":{"get_time":{}}}',
@@ -70,21 +72,23 @@ def decrypt(string):
 	return result
 
 # Parse commandline arguments
-parser = argparse.ArgumentParser(description="TP-Link Wi-Fi Smart Plug Client v" + str(version))
+description="TP-Link Wi-Fi Smart Plug Client v" + str(version)
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument("--version", action="version", version=description)
+
 parser.add_argument("-t", "--target", metavar="<hostname>", required=True, help="Target hostname or IP address", type=validHostname)
-group = parser.add_mutually_exclusive_group(required=True)
+
+group = parser.add_mutually_exclusive_group()
 group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands)
 group.add_argument("-j", "--json", metavar="<JSON string>", help="Full JSON string of command to send")
+
 args = parser.parse_args()
 
 
 # Set target IP, port and command to send
 ip = args.target
 port = 9999
-if args.command is None:
-	cmd = args.json
-else:
-	cmd = commands[args.command]
+cmd = args.json if args.json else commands[args.command or 'info']
 
 
 
