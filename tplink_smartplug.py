@@ -23,7 +23,7 @@ import socket
 import argparse
 from struct import pack
 
-version = 0.2
+version = 0.3
 
 # Check if hostname is valid
 def validHostname(hostname):
@@ -55,21 +55,19 @@ commands = {'info'     : '{"system":{"get_sysinfo":{}}}',
 # XOR Autokey Cipher with starting key = 171
 def encrypt(string):
 	key = 171
-	result = pack('>I', len(string))
-	for i in string:
-		a = key ^ ord(i)
-		key = a
-		result += chr(a)
-	return result
+	result = []
+	for plain in map(ord, string):
+		key ^= plain
+		result.append(key)
+	return b''.join(map(chr, result))
 
 def decrypt(string):
 	key = 171
-	result = ""
-	for i in string:
-		a = key ^ ord(i)
-		key = ord(i)
-		result += chr(a)
-	return result
+	result = []
+	for cipher in map(ord, string):
+		result.append(key ^ cipher)
+		key = cipher
+	return b''.join(map(chr, result))
 
 # Parse commandline arguments
 description="TP-Link Wi-Fi Smart Plug Client v" + str(version)
@@ -96,7 +94,7 @@ cmd = args.json if args.json else commands[args.command or 'info']
 try:
 	sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock_tcp.connect((ip, port))
-	sock_tcp.send(encrypt(cmd))
+	sock_tcp.send(pack('>I', len(cmd)) + encrypt(cmd))
 	data = sock_tcp.recv(2048)
 	sock_tcp.close()
 
