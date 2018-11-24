@@ -20,19 +20,9 @@
 #
 
 import socket
-import argparse
 from struct import pack, unpack
 
-version = 0.5
-
-
-# Check if hostname is valid
-def validHostname(hostname):
-	try:
-		socket.gethostbyname(hostname)
-	except socket.error:
-		parser.error("Invalid hostname.")
-	return hostname
+version = 0.6
 
 
 # Predefined Smart Plug Commands
@@ -98,28 +88,40 @@ def comm(ip, cmd, port=9999):
 
 
 
-# Parse commandline arguments
-description="TP-Link Wi-Fi Smart Plug Client v" + str(version)
-parser = argparse.ArgumentParser(description=description)
-parser.add_argument("--version", action="version", version=description)
+if __name__ == '__main__':
+	import argparse
 
-parser.add_argument("-t", "--target", metavar="<hostname>", required=True, help="Target hostname or IP address", type=validHostname)
-
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands)
-group.add_argument("-j", "--json", metavar="<JSON string>", help="Full JSON string of command to send")
-
-args = parser.parse_args()
+	# Check if hostname is valid
+	def validHostname(hostname):
+		try:
+			socket.gethostbyname(hostname)
+		except socket.error:
+			parser.error("Invalid hostname.")
+		return hostname
 
 
-# command to send
-cmd = args.json if args.json else commands[args.command or 'info']
-reply = ''
+	# Parse commandline arguments
+	description="TP-Link Wi-Fi Smart Plug Client v" + str(version)
+	parser = argparse.ArgumentParser(description=description)
+	parser.add_argument("--version", action="version", version=description)
 
-try:
-	reply = comm(args.target, cmd)
-except CommFailure as e:
-	print "<<%s>>" % (str(e),)
-finally:
-	print "%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd)
-	print "%-16s %s" % ("Received(%d):" % (len(reply),), reply)
+	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, help="Target hostname or IP address", type=validHostname)
+
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands)
+	group.add_argument("-j", "--json", metavar="<JSON string>", help="Full JSON string of command to send")
+
+	args = parser.parse_args()
+
+
+	# command to send
+	cmd = args.json if args.json else commands[args.command or 'info']
+	reply = ''
+
+	try:
+		reply = comm(args.target, cmd)
+	except CommFailure as e:
+		print "<<%s>>" % (str(e),)
+	finally:
+		print "%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd)
+		print "%-16s %s" % ("Received(%d):" % (len(reply),), reply)
