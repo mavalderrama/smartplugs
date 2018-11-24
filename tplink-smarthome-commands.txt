@@ -184,3 +184,28 @@ Delete Anti-Theft Rule with given ID
 
 Delete All Anti-Theft Rules
 "anti_theft":{"delete_all_rules":null}}
+
+
+
+
+LB130 RGB light bulb (also KL110)
+========================================
+notes:
+  maybe only via UDP
+  maybe msgs not preceded by length bytes
+  Saturation and Brighness are 0-100
+  Hue is 0-360
+  on_off turns the light on or off (a brightness of 0 will still have some brightness)
+  color_temp sets the color temperature
+  Transition Period is the delay in milliseconds for fading between colors
+
+{"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"saturation:"100,"brightness":100,"mode":"normal","ignore_default":1,"color_temp":0,"hue":360,"on_off":1,"transition_period":3000}}}
+
+Turn bulb on:  {"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"on_off":1}}}
+
+Turn bulb off: {"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"on_off":0}}}
+
+Turn bulb on over 10 seconds: {"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"on_off":0, "transition_period":10000}}}
+
+Turn bulb on over 10 seconds: {"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"on_off":1, "transition_period":10000}}}
+  (but the ramping up is uneven at dim levels)
