@@ -21,9 +21,9 @@
 
 import socket
 import argparse
-from struct import pack
+from struct import pack, unpack
 
-version = 0.3
+version = 0.4
 
 # Check if hostname is valid
 def validHostname(hostname):
@@ -96,10 +96,12 @@ try:
 	sock_tcp.connect((ip, port))
 	sock_tcp.send(pack('>I', len(cmd)) + encrypt(cmd))
 	data = sock_tcp.recv(2048)
+	dlen = 4 + unpack('>I', data[:4])[0]
+	while len(data) < dlen:
+		data += sock_tcp.recv(2048)
 	sock_tcp.close()
 
-	print "Sent:     ", cmd
-	print "Received: ", decrypt(data[4:])
+	print "%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd)
+	print "%-16s %s" % ("Received(%d):" % (len(data),), decrypt(data[4:]))
 except socket.error:
 	quit("Cound not connect to host " + ip + ":" + str(port))
-
