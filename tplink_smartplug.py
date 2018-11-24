@@ -22,12 +22,12 @@
 import socket
 from struct import pack, unpack
 
-version = 0.6
+VERSION = 0.7
 
 
 # Predefined Smart Plug Commands
 # For a full list of commands, consult tplink_commands.txt
-commands = {
+COMMANDS = {
 	'info'     : '{"system":{"get_sysinfo":{}}}',
 	'on'       : '{"system":{"set_relay_state":{"state":1}}}',
 	'off'      : '{"system":{"set_relay_state":{"state":0}}}',
@@ -101,21 +101,24 @@ if __name__ == '__main__':
 
 
 	# Parse commandline arguments
-	description="TP-Link Wi-Fi Smart Plug Client v" + str(version)
+	description="TP-Link Wi-Fi Smart Plug Client v%s" % (VERSION,)
 	parser = argparse.ArgumentParser(description=description)
 	parser.add_argument("--version", action="version", version=description)
 
-	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, help="Target hostname or IP address", type=validHostname)
+	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, type=validHostname,
+		help="Target hostname or IP address")
 
 	group = parser.add_mutually_exclusive_group()
-	group.add_argument("-c", "--command", metavar="<command>", help="Preset command to send. Choices are: "+", ".join(commands), choices=commands)
-	group.add_argument("-j", "--json", metavar="<JSON string>", help="Full JSON string of command to send")
+	group.add_argument("-c", "--command", metavar="<command>", choices=COMMANDS,
+		help="Preset command to send. Choices are: "+", ".join(COMMANDS))
+	group.add_argument("-j", "--json", metavar="<JSON string>",
+		help="Full JSON string of command to send")
 
 	args = parser.parse_args()
 
 
 	# command to send
-	cmd = args.json if args.json else commands[args.command or 'info']
+	cmd = args.json if args.json else COMMANDS[args.command or 'info']
 	reply = ''
 
 	try:
