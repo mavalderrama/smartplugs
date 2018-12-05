@@ -19,10 +19,11 @@
 # limitations under the License.
 #
 
+from __future__ import print_function
 import socket
 from struct import pack, unpack
 
-VERSION = 0.7
+VERSION = 0.8
 
 
 # Predefined Smart Plug Commands
@@ -90,6 +91,7 @@ def comm(ip, cmd, port=9999):
 
 if __name__ == '__main__':
 	import argparse
+	import sys
 
 	# Check if hostname is valid
 	def validHostname(hostname):
@@ -104,6 +106,8 @@ if __name__ == '__main__':
 	description="TP-Link Wi-Fi Smart Plug Client v%s" % (VERSION,)
 	parser = argparse.ArgumentParser(description=description)
 	parser.add_argument("--version", action="version", version=description)
+	parser.add_argument("-n", "--naked-json", action='store_true',
+		help="Output only the JSON result")
 
 	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, type=validHostname,
 		help="Target hostname or IP address")
@@ -123,8 +127,14 @@ if __name__ == '__main__':
 
 	try:
 		reply = comm(args.target, cmd)
+		ec = len(reply) <= 0
 	except CommFailure as e:
-		print "<<%s>>" % (str(e),)
+		print("<<%s>>" % (str(e),), file=stderr)
+		ec = 2
 	finally:
-		print "%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd)
-		print "%-16s %s" % ("Received(%d):" % (len(reply),), reply)
+		if args.naked_json:
+			print(reply)
+		else:
+			print("%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd))
+			print("%-16s %s" % ("Received(%d):" % (len(reply),), reply))
+	sys.exit(ec)
