@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # TP-Link Wi-Fi Smart Plug Protocol Client
 # For use with TP-Link HS-100 or HS-110
@@ -23,7 +23,7 @@ from __future__ import print_function
 import socket
 from struct import pack, unpack
 
-VERSION = 0.8
+VERSION = 0.9
 
 
 # Predefined Smart Plug Commands
@@ -51,18 +51,24 @@ COMMANDS = {
 def encrypt(string):
 	key = 171
 	result = []
-	for plain in map(ord, string):
+	chars = isinstance(string[0], str)
+	if chars:
+		string = map(ord, string)
+	for plain in string:
 		key ^= plain
 		result.append(key)
-	return b''.join(map(chr, result))
+	return b''.join(map(chr, result)) if chars else bytes(result)
 
 def decrypt(string):
 	key = 171
 	result = []
-	for cipher in map(ord, string):
+	chars = isinstance(string[0], str)
+	if chars:
+		string = map(ord, string)
+	for cipher in string:
 		result.append(key ^ cipher)
 		key = cipher
-	return b''.join(map(chr, result))
+	return b''.join(map(chr, result)) if chars else bytes(result)
 
 
 
@@ -71,6 +77,9 @@ class CommFailure(Exception):
 
 # Send command and receive reply
 def comm(ip, cmd, port=9999):
+	dec = isinstance(cmd, str)
+	if dec:
+		cmd = cmd.encode()
 	try:
 		sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock_tcp.connect((ip, port))
@@ -84,7 +93,8 @@ def comm(ip, cmd, port=9999):
 		raise CommFailure("Could not connect to host %s:%d" % (ip, port))
 	finally:
 		sock_tcp.close()
-	return decrypt(data[4:])
+	res = decrypt(data[4:])
+	return res.decode() if dec else res
 
 
 
