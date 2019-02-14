@@ -188,6 +188,14 @@ Delete All Anti-Theft Rules
 
 
 
+HS220 Smart Dimmer
+==================
+notes:
+  brightness varies from 1-100
+  brightness can be set (or will be remembered) while off
+{"smartlife.iot.dimmer": {"set_brightness": {"brightness": %d}}}
+
+
 LB130 RGB light bulb (also KL110)
 ========================================
 notes:

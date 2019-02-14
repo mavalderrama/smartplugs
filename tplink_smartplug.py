@@ -42,7 +42,9 @@ COMMANDS = {
 	'antitheft': '{"anti_theft":{"get_rules":{}}}',
 	'reboot'   : '{"system":{"reboot":{"delay":1}}}',
 	'reset'    : '{"system":{"reset":{"delay":1}}}',
-	'energy'   : '{"emeter":{"get_realtime":{}}}'
+	'energy'   : '{"emeter":{"get_realtime":{}}}',
+# HS220
+	'bright'   : '{"smartlife.iot.dimmer": {"set_brightness": {"brightness": %d}}}'
 }
 
 
@@ -121,6 +123,8 @@ if __name__ == '__main__':
 
 	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, type=validHostname,
 		help="Target hostname or IP address")
+	parser.add_argument("-a", "--argument", metavar="<value>",
+		help="Some commands (bright) require an argument")
 
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument("-c", "--command", metavar="<command>", choices=COMMANDS,
@@ -133,6 +137,11 @@ if __name__ == '__main__':
 
 	# command to send
 	cmd = args.json if args.json else COMMANDS[args.command or 'info']
+	if not args.argument is None:
+		try:
+			cmd = cmd % (args.argument,)
+		except TypeError:
+			cmd = cmd % (int(args.argument),)
 	reply = ''
 
 	try:
