@@ -120,6 +120,8 @@ if __name__ == '__main__':
 	parser.add_argument("--version", action="version", version=description)
 	parser.add_argument("-n", "--naked-json", action='store_true',
 		help="Output only the JSON result")
+	parser.add_argument("-s", "--silent", action='store_true',
+		help="No output")
 
 	parser.add_argument("-t", "--target", metavar="<hostname>", required=True, type=validHostname,
 		help="Target hostname or IP address")
@@ -153,7 +155,7 @@ if __name__ == '__main__':
 	finally:
 		if args.naked_json:
 			print(reply)
-		else:
+		elif not args.silent:
 			print("%-16s %s" % ("Sent(%d):" % (len(cmd),), cmd))
 			print("%-16s %s" % ("Received(%d):" % (len(reply),), reply))
 	sys.exit(ec)
