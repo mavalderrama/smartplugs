@@ -9,8 +9,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build & Push Docker image
-      run: |
-        docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
-        docker build -t mavalderrama/kasa:latest . -f Dockerfile
-        docker push mavalderrama/kasa:latest
+    - name: Build and push Docker
+    - uses: uraimo/run-on-arch-action@v1.0.6
+      id: runcmd
+      with:
+        architecture: aarch64
+        distribution: ubuntu18.04
+        run: |
+          docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
+          docker build -t mavalderrama/kasa:latest . -f Dockerfile
+          docker push mavalderrama/kasa:latest
