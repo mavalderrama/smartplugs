@@ -13,8 +13,7 @@ RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-ENTRYPOINT ["gunicorn"]
+ENTRYPOINT ["gunicorn", "-w 2","-b 0.0.0.0:5000", "wsgi:app"]
 
-CMD ["-w 2","-b 0.0.0.0:5000", "wsgi:app"]
 
 
