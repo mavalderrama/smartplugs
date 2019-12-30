@@ -9,12 +9,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build and push Docker
-      uses: uraimo/run-on-arch-action@v1.0.6
+    - name: Docker Buildx
+      uses: crazy-max/ghaction-docker-buildx@v1.0.5
       with:
-        architecture: arm64v8
-        distribution: buster
-        run: |
-          docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
-          docker build -t mavalderrama/kasa:latest . -f Dockerfile
-          docker push mavalderrama/kasa:latest
+          version: latest
+    - name: Available platforms
+      run: echo ${{ steps.buildx.outputs.platforms }}
+    - name: Run Buildx
+      run: |
+        docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
+        docker buildx build \
+          --platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x \
+          --file Dockerfile \
+          --push . \
+          -t mavalderrama/kasa:latest
