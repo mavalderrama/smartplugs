@@ -1,89 +1,48 @@
+import datetime
 import json
+import os
+from threading import Thread
 
-from flask import current_app as app, jsonify
-from flask_restful import Resource, reqparse
+from fastapi import FastAPI
 
-from . import api
-from .tplink_smartplug import KASA
+from models.available_devices import Devices
 
-route_head = "/api/v1/"
+api_prefix = os.getenv("API_PREFIX", "/")
 
-fan = KASA("fan", "192.168.50.208")
-cuarto = KASA("cuarto", "192.168.50.161")
+first_run = datetime.datetime.utcnow()
 
-iot = {"fan": fan, "cuarto": cuarto}
-
-
-@app.after_request
-def after_request(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,OPTIONS")
-    response.headers.add("Access-Control-Allow-Credentials", "false")
-    return response
+app = FastAPI()
 
 
-class Entrypoint(Resource):
-    def get(self):
-
-        return jsonify(message="Welcome to KASA API")
-
-
-class Toggle(Resource):
-    def get(self, id):
-        try:
-            if id in iot:
-                iot_obj = iot[id]
-                reply = iot_obj.send("info")
-                relay_state = json.loads(reply)["system"]["get_sysinfo"]["relay_state"]
-                if relay_state == 1:
-                    iot_obj.send("off")
-                else:
-                    iot_obj.send("on")
-        except Exception as ex:
-            print(ex)
-
-    def post(self):
-        iot_obj = iot[id]
-        parser = reqparse.RequestParser()
-        parser.add_argument("state", type=int)
-        args = parser.parse_args()
-        if args["state"] == 0:
-            iot_obj.send("off")
-        elif args["state"] == 1:
-            iot_obj.send("on")
-        return 200
+@app.get("".join([api_prefix, "health_check"]))
+async def health_check():
+    try:
+        return json.dumps(
+            dict(
+                status="Up and running",
+                local_time="{}".format(datetime.datetime.utcnow()),
+                running_since="{}".format(first_run),
+            )
+        )
+    except Exception as error:
+        return json.dumps(
+            dict(
+                status="something went wrong",
+                local_time="{}".format(datetime.datetime.utcnow()),
+                message=str(error),
+            )
+        )
 
 
-class GoodNight(Resource):
-    def get(self, id):
-        try:
-            if id in iot:
-                iot_obj = iot[id]
-                reply = iot_obj.send("info")
-                relay_state = json.loads(reply)["system"]["get_sysinfo"]["led_off"]
-                print(relay_state)
-                if relay_state == 0:
-                    iot_obj.send("ledoff")
-                else:
-                    iot_obj.send("ledon")
-            return 200
-        except Exception as ex:
-            print(ex)
-            return 400
-
-    def post(self, id):
-        iot_obj = iot[id]
-        parser = reqparse.RequestParser()
-        parser.add_argument("state", type=int)
-        args = parser.parse_args()
-        if args["state"] == 0:
-            iot_obj.send("ledoff")
-        elif args["state"] == 1:
-            iot_obj.send("ledon")
-        return 200
+async def start(device: Devices):
+    device
 
 
-api.add_resource(Entrypoint, route_head)
-api.add_resource(Toggle, route_head + "toggle/<string:id>")
-api.add_resource(GoodNight, route_head + "goodnight/<string:id>")
+@app.post("".join([api_prefix, "start"]))
+async def start_server(device: Devices):
+    try:
+        server = Thread(target=start, args=(device,), daemon=True)
+        server.start()
+        return json.dumps(dict(status=200, message="daemon running"))
+    except Exception as error:
+        raise Exception("Something happened to the server => {}".format(error))

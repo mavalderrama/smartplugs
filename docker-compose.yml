@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+
+  kasa:
+    image: mavalderrama/kasa
+    container_name: kasa
+    ports:
+      - '5000:5000'
+    depends_on:
+      - postgres
+    volumes:
+    entrypoint: ["gunicorn","-b 0.0.0.0:5000", "wsgi:app"]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:alpine
+    container_name: kasa_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: kasa_db
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+
+  ouroboros:
+    container_name: ouroboros
+    hostname: ouroboros
+    image: pyouroboros/ouroboros
+    environment:
+      - CLEANUP=true
+      - INTERVAL=300
+      - LOG_LEVEL=info
+      - SELF_UPDATE=true
+      - IGNORE=mongo influxdb postgres mariadb
+      - TZ=America/Bogota
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

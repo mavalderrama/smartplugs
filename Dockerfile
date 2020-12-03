@@ -1,19 +1,21 @@
-FROM python:3.8.1-slim-buster
+FROM python:3.8-slim
 
 RUN apt-get update && \
     apt-get upgrade -y
 
 ENV FLASK_ENV development
 
-WORKDIR .
+WORKDIR kasa
 
-COPY . .
+COPY requirements.txt .
+
+RUN pip install pip -U
 
 RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-ENTRYPOINT ["gunicorn", "-w 2","-b 0.0.0.0:5000", "wsgi:app"]
+ENTRYPOINT ["gunicorn","-b 0.0.0.0:5000", "wsgi:app"]
 
 
 
